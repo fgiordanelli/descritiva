@@ -7,15 +7,15 @@ descritiva <- function(dados) {
         dplyr::mutate(perc = 100*round(qtd/sum(qtd),4)) %>%
         dplyr::arrange(-perc) %>%
         dplyr::mutate(n_Count = row_number()) %>%
-        filter(n_Count <= 10) %>%
+        dplyr::filter(n_Count <= 10) %>%
         dplyr::rename(col1 = 1)
 
       print(
-        ggplot(teste, aes(x = col1, y = qtd, fill = col1)) +
-          geom_bar(stat = "identity") +
-          geom_text(aes(label = paste0("(",qtd,", ",perc,"%",")")), vjust = -1, size = 2.5) +
-          scale_fill_brewer(palette="Paired") +
-          labs(x = NULL,
+        ggplot2::ggplot(teste, aes(x = col1, y = qtd, fill = col1)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::geom_text(aes(label = paste0("(",qtd,", ",perc,"%",")")), vjust = -1, size = 2.5) +
+          ggplot2::scale_fill_brewer(palette="Paired") +
+          ggplot2::labs(x = NULL,
                y = "count & perc",
                fill = colnames(dados[i]))
       )
@@ -46,11 +46,10 @@ descritiva <- function(dados) {
         nome1 <- colnames(dados[i])
         nome2 <- colnames(dados[j])
 
-        #print(
-        # ggplot(dados, aes_string(x = nome1,y = nome2)) +
-        #  geom_point()
-        #)
-        print(chart.Correlation(dados[,c(i,j)], histogram=TRUE, pch=19)
+        print(
+          PerformanceAnalytics::chart.Correlation(dados[,c(i,j)], histogram=TRUE, pch=19
+              )
+
         )
       }
     }
@@ -73,9 +72,12 @@ descritiva <- function(dados) {
         nome2 <- colnames(dados[j])
 
         print(
-          ggplot(dados, aes_string(x = nome1,y = nome2)) +
-            geom_boxplot() +
-            coord_flip()
+          ggplot2::ggplot(dados, aes_string(x = nome1,y = nome2)) +
+            ggplot2::geom_boxplot() +
+            ggplot2::coord_flip() +
+            ggplot2::labs(
+              title = paste(colnames(dados[i]),colnames(dados[j]),sep = " x ")
+            )
         )
       }
       if ((is.factor(dados[,i]) == TRUE &
@@ -85,10 +87,23 @@ descritiva <- function(dados) {
 
 
         print(
-          kable(dados %>%
-                  group_by_at(colnames(dados[i])) %>%
-                  summarize_at(.vars = colnames(dados[j]), funs(min, max, mean, median, sd, q1 = quantile(.,probs = c(0.25)), q3 = quantile(., probs = 0.75)),na.rm = TRUE)) %>%
-            kable_styling()
+          knitr::kable(dados %>%
+                         dplyr::group_by_at(colnames(dados[i])) %>%
+                         dplyr::summarize_at(.vars = colnames(dados[j]),
+                                      list(~ min(.,na.rm = TRUE),
+                                           q1 = ~ quantile(.,
+                                                           probs = c(0.25),
+                                                           na.rm = TRUE),
+                                           q3 = ~ quantile(.,
+                                                           probs = c(0.75),
+                                                           na.rm = TRUE),
+                                           ~ max(.,na.rm = TRUE),
+                                           ~ mean(., na.rm = TRUE),
+                                           ~ sd(., na.rm = TRUE))),
+                       format = "html",
+                       digits = 2,
+                       caption = paste(colnames(dados[i]),colnames(dados[j]),sep = " x ")) %>%
+            kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
         )
       }
 
@@ -99,17 +114,28 @@ descritiva <- function(dados) {
 
 
         print(
-          kable(dados %>%
-                  group_by_at(colnames(dados[j])) %>%
-                  summarize_at(.vars = colnames(dados[i]), funs(min, max, mean, median, sd, q1 = quantile(.,probs = c(0.25)), q3 = quantile(., probs = 0.75)))) %>%
-            kable_styling()
+          knitr::kable(dados %>%
+                         dplyr::group_by_at(colnames(dados[j])) %>%
+                         dplyr::summarize_at(.vars = colnames(dados[i]),
+                                      list(~ min(.,na.rm = TRUE),
+                                           q1 = ~ quantile(.
+                                                           ,probs = c(0.25),
+                                                           na.rm = TRUE),
+                                           q3 = ~ quantile(.,
+                                                           probs = c(0.75),
+                                                           na.rm = TRUE),
+                                           ~ max(.,na.rm = TRUE),
+                                           ~ mean(., na.rm = TRUE),
+                                           ~ sd(., na.rm = TRUE))),
+                       format = "html",digits = 2) %>%
+            kableExtra::kable_styling()
         )
       }
 
     }
   }
 
-
+#  (min, max, mean, median, sd, q1 = quantile(.,probs = c(0.25)), q3 = quantile(., probs = 0.75)
 
   for (i in 1:ncol(dados)-1) {
     for (j in (1+i):ncol(dados)) {
@@ -127,15 +153,15 @@ descritiva <- function(dados) {
           dplyr::summarise(qtd = n()) %>%
           dplyr::mutate(perc = 100*round(qtd/sum(qtd),4)) %>%
           dplyr::mutate(n_Count = row_number()) %>%
-          filter(n_Count <= 10) %>%
+          dplyr::filter(n_Count <= 10) %>%
           dplyr::rename(col1 = 1, col2 = 2)
 
         print(
-          ggplot(teste, aes(x = col1,y = perc, fill = col2)) +
-            geom_bar(stat = "identity", position = position_dodge(width = 1)) +
-            geom_text(aes(label = paste0("(",qtd,", ",perc,"%",")")),position = position_dodge(width = 1), vjust = -1, size = 2) +
-            scale_fill_brewer(palette="Paired") +
-            labs(x = NULL,
+          ggplot2::ggplot(teste, aes(x = col1,y = perc, fill = col2)) +
+            ggplot2::geom_bar(stat = "identity", position = position_dodge(width = 1)) +
+            ggplot2::geom_text(aes(label = paste0("(",qtd,", ",perc,"%",")")),position = position_dodge(width = 1), vjust = -1, size = 2) +
+            ggplot2::scale_fill_brewer(palette="Paired") +
+            ggplot2::labs(x = NULL,
                  y = "count & perc",
                  fill = colnames(dados[j]))
 
@@ -146,8 +172,3 @@ descritiva <- function(dados) {
   }
 
 }
-
-
-
-
-
