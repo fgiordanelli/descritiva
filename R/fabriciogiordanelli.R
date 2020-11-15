@@ -105,6 +105,7 @@ descritiva <- function(dados) {
                        caption = paste(colnames(dados[i]),colnames(dados[j]),sep = " x ")) %>%
             kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
         )
+        chart.Correlation(as.data.frame(split(dados[,j],dados[,i]))) # primeiro numérico dps colocar o fator/caracter
       }
 
       if ((is.numeric(dados[,i]) == TRUE &
@@ -130,6 +131,7 @@ descritiva <- function(dados) {
                        format = "html",digits = 2) %>%
             kableExtra::kable_styling()
         )
+        chart.Correlation(as.data.frame(split(dados[,i],dados[,j]))) # primeiro numérico dps colocar o fator/caracter
       }
 
     }
