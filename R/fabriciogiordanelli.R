@@ -39,21 +39,107 @@ descritiva <- function(dados) {
 
 
 
-  for (i in 1:ncol(dados)-1) {
-    for (j in (1+i):ncol(dados)) {
-      if (is.numeric(dados[,i]) == TRUE & is.numeric(dados[,j]) == TRUE )  {
+for (i in 1:ncol(dados)-1) {
+  for (j in (1+i):ncol(dados)) {
+    if (is.numeric(dados[,i]) == TRUE & is.numeric(dados[,j]) == TRUE )  {
 
-        nome1 <- colnames(dados[i])
-        nome2 <- colnames(dados[j])
+      nome1 <- colnames(dados[i])
+      nome2 <- colnames(dados[j])
 
-        print(
-          PerformanceAnalytics::chart.Correlation(dados[,c(i,j)], histogram=TRUE, pch=19
-              )
+      print(
+        PerformanceAnalytics::chart.Correlation(dados[,c(i,j)], histogram=TRUE, pch=19
+            )
 
-        )
-      }
+      )
     }
   }
+}
+
+
+
+  for (i in 1:ncol(dados)-2) {
+    for (j in (1+i):ncol(dados)-1) {
+      for (k in (1+j):ncol(dados)) {
+        if ((is.factor(dados[,i]) == TRUE | is.character(dados[,i]) == TRUE) &
+            is.numeric(dados[,j]) == TRUE &
+            is.numeric(dados[,k]) == TRUE ){
+
+          tryCatch({
+          a <- dados %>%
+            group_by(dados[,i]) %>%
+            summarize(corr = cor(!!sym(colnames(dados[j])),!!sym(colnames(dados[k]))))  %>%
+            rename(col1 = 1)
+
+
+          print(
+            ggplot(a, aes(x = col1, y = corr,fill = col1)) +
+              geom_bar(stat = "identity") +
+              geom_text(aes(label = round(corr,2)), vjust = -1) +
+              scale_fill_brewer(palette="Paired") +
+              ggplot2::labs(x = NULL,
+                            y = "Correlação",
+                            fill = colnames(dados[i]),
+                            title = paste(colnames(dados[j]),colnames(dados[k]), sep = " e " ))
+          )
+
+          stop("teste")} ,error = function(e){})
+        }
+
+        if (is.numeric(dados[,i]) == TRUE &
+            (is.factor(dados[,j]) == TRUE | is.character(dados[,i]) == TRUE) &
+            is.numeric(dados[,k]) == TRUE ){
+
+          tryCatch({
+          a <- dados %>%
+            group_by(dados[,j]) %>%
+            summarize(corr = cor(!!sym(colnames(dados[i])),!!sym(colnames(dados[k]))))  %>%
+            rename(col1 = 1)
+
+
+          print(
+            ggplot(a, aes(x = col1, y = corr,fill = col1)) +
+              geom_bar(stat = "identity") +
+              geom_text(aes(label = round(corr,2)), vjust = -1) +
+              scale_fill_brewer(palette="Paired")+
+              ggplot2::labs(x = NULL,
+                            y = "Correlação",
+                            fill = colnames(dados[j]),
+                            paste(colnames(dados[j]),colnames(dados[k]), sep = " e " ))
+          )
+          stop("teste")} ,error = function(e){})
+
+        }
+        if (is.numeric(dados[,i]) == TRUE &
+            is.numeric(dados[,j]) == TRUE &
+            (is.factor(dados[,k]) == TRUE | is.character(dados[,k]) == TRUE)){
+
+          tryCatch({
+          a <- dados %>%
+            group_by(dados[,k]) %>%
+            summarize(corr = cor(!!sym(colnames(dados[i])),!!sym(colnames(dados[j]))))  %>%
+            arrange(-corr) %>%
+            mutate(n_Count = row_number()) %>%
+            filter(n_Count <= 10) %>%
+            rename(col1 = 1)
+
+
+          print(
+            ggplot(a, aes(reorder(x = col1, -corr), y = corr,fill = col1)) +
+              geom_bar(stat = "identity") +
+              geom_text(aes(label = round(corr,2)), vjust = -1) +
+              scale_fill_brewer(palette="Paired")+
+              ggplot2::labs(x = NULL,
+                            y = "Correlação",
+                            fill = colnames(dados[k]),
+                            paste(colnames(dados[j]),colnames(dados[k]), sep = " e " ))
+          )
+          stop("teste")} ,error = function(e){})
+
+          }
+
+      }
+    }
+}
 
 
 
@@ -117,14 +203,15 @@ descritiva <- function(dados) {
           setNames(unlist(group_keys(dados2)))
 
 
-        dados4 <- do.call("cbind", dados3)
+        tryCatch({
+          dados4 <- do.call("cbind", dados3)
 
         dados5 <- dplyr::select_if(dados4, is.numeric)
 
         print(
           PerformanceAnalytics::chart.Correlation(dados5)
         )
-
+        stop("teste")} ,error = function(e){})
 
       }
 
@@ -161,7 +248,8 @@ descritiva <- function(dados) {
           dplyr::group_split() %>%
           setNames(unlist(group_keys(dados2)))
 
-
+        skip_to_next <- FALSE
+        tryCatch({
         dados4 <- do.call("cbind", dados3)
 
         dados5 <- dplyr::select_if(dados4, is.numeric)
@@ -169,6 +257,9 @@ descritiva <- function(dados) {
         print(
           chart.Correlation(dados5)
         )
+        stop("teste")} ,error = function(e){})
+
+        if(skip_to_next) { next }
 
 
       }
