@@ -105,7 +105,27 @@ descritiva <- function(dados) {
                        caption = paste(colnames(dados[i]),colnames(dados[j]),sep = " x ")) %>%
             kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
         )
-        chart.Correlation(as.data.frame(split(dados[,j],dados[,i]))) # primeiro numérico dps colocar o fator/caracter
+
+
+
+        dados2= dados %>%
+          dplyr::select(colnames(dados[j]),colnames(dados[i])) %>%
+          dplyr::group_by_at(colnames(dados[i]))
+
+        dados3= dados2 %>%
+          dplyr::group_split() %>%
+          setNames(unlist(group_keys(dados2)))
+
+
+        dados4 <- do.call("cbind", dados3)
+
+        dados5 <- dplyr::select_if(dados4, is.numeric)
+
+        print(
+          PerformanceAnalytics::chart.Correlation(dados5)
+        )
+
+
       }
 
       if ((is.numeric(dados[,i]) == TRUE &
@@ -131,7 +151,26 @@ descritiva <- function(dados) {
                        format = "html",digits = 2) %>%
             kableExtra::kable_styling()
         )
-        chart.Correlation(as.data.frame(split(dados[,i],dados[,j]))) # primeiro numérico dps colocar o fator/caracter
+
+
+        dados2= dados %>%
+          dplyr::select(colnames(dados[i]),colnames(dados[j])) %>%
+          dplyr::group_by_at(colnames(dados[j]))
+
+        dados3= dados2 %>%
+          dplyr::group_split() %>%
+          setNames(unlist(group_keys(dados2)))
+
+
+        dados4 <- do.call("cbind", dados3)
+
+        dados5 <- dplyr::select_if(dados4, is.numeric)
+
+        print(
+          chart.Correlation(dados5)
+        )
+
+
       }
 
     }
