@@ -13,11 +13,12 @@ descritiva <- function(dados) {
       print(
         ggplot2::ggplot(teste, aes(x = col1, y = qtd, fill = col1)) +
           ggplot2::geom_bar(stat = "identity") +
-          ggplot2::geom_text(aes(label = paste0("(",qtd,", ",perc,"%",")")), vjust = -1, size = 2.5) +
-          ggplot2::scale_fill_brewer(palette="Paired") +
+          ggplot2::geom_text(aes(label = paste0("(",qtd,", ",perc,"%",")")), size = 2.5, vjust = -1) +
+          scale_fill_brewer(palette="Paired") +
           ggplot2::labs(x = NULL,
                y = "count & perc",
-               fill = colnames(dados[i]))
+               fill = colnames(dados[i]),
+               title = paste("Quantidade e Percentual de", colnames(dados[i])))
       )
 
     }
@@ -66,20 +67,21 @@ for (i in 1:ncol(dados)-1) {
 
           tryCatch({
           a <- dados %>%
-            group_by(dados[,i]) %>%
-            summarize(corr = cor(!!sym(colnames(dados[j])),!!sym(colnames(dados[k]))))  %>%
+            dplyr::group_by(dados[,i]) %>%
+            dplyr::summarize(corr = cor(!!sym(colnames(dados[j])),!!sym(colnames(dados[k]))))  %>%
             rename(col1 = 1)
 
 
           print(
-            ggplot(a, aes(x = col1, y = corr,fill = col1)) +
-              geom_bar(stat = "identity") +
-              geom_text(aes(label = round(corr,2)), vjust = -1) +
+            ggplot2::ggplot(a, aes(x = col1, y = corr,fill = col1)) +
+              ggplot2::geom_bar(stat = "identity") +
+              ggplot2::geom_text(aes(label = round(corr,2))) +
               scale_fill_brewer(palette="Paired") +
               ggplot2::labs(x = NULL,
                             y = "Correlação",
                             fill = colnames(dados[i]),
-                            title = paste(colnames(dados[j]),colnames(dados[k]), sep = " e " ))
+                            title = paste("Correlação entre ",colnames(dados[j])," e ",colnames(dados[k]))) +
+              ggplot2::coord_flip()
           )
 
           stop("teste")} ,error = function(e){})
@@ -91,20 +93,21 @@ for (i in 1:ncol(dados)-1) {
 
           tryCatch({
           a <- dados %>%
-            group_by(dados[,j]) %>%
-            summarize(corr = cor(!!sym(colnames(dados[i])),!!sym(colnames(dados[k]))))  %>%
+            dplyr::group_by(dados[,j]) %>%
+            dplyr::summarize(corr = cor(!!sym(colnames(dados[i])),!!sym(colnames(dados[k]))))  %>%
             rename(col1 = 1)
 
 
           print(
-            ggplot(a, aes(x = col1, y = corr,fill = col1)) +
-              geom_bar(stat = "identity") +
-              geom_text(aes(label = round(corr,2)), vjust = -1) +
+            ggplot2::ggplot(a, aes(x = col1, y = corr,fill = col1)) +
+              ggplot2::geom_bar(stat = "identity") +
+              ggplot2::geom_text(aes(label = round(corr,2)), vjust = -1) +
               scale_fill_brewer(palette="Paired")+
               ggplot2::labs(x = NULL,
                             y = "Correlação",
                             fill = colnames(dados[j]),
-                            paste(colnames(dados[j]),colnames(dados[k]), sep = " e " ))
+                            title = paste("Correlação entre ",colnames(dados[j]),colnames(dados[k]), sep = " e " ))+
+              ggplot2::coord_flip()
           )
           stop("teste")} ,error = function(e){})
 
@@ -115,23 +118,24 @@ for (i in 1:ncol(dados)-1) {
 
           tryCatch({
           a <- dados %>%
-            group_by(dados[,k]) %>%
-            summarize(corr = cor(!!sym(colnames(dados[i])),!!sym(colnames(dados[j]))))  %>%
-            arrange(-corr) %>%
-            mutate(n_Count = row_number()) %>%
-            filter(n_Count <= 10) %>%
-            rename(col1 = 1)
+            dplyr::group_by(dados[,k]) %>%
+            dplyr::summarize(corr = cor(!!sym(colnames(dados[i])),!!sym(colnames(dados[j]))))  %>%
+            dplyr::arrange(-corr) %>%
+            dplyr::mutate(n_Count = row_number()) %>%
+            dplyr::filter(n_Count <= 10) %>%
+            dplyr::rename(col1 = 1)
 
 
           print(
-            ggplot(a, aes(reorder(x = col1, -corr), y = corr,fill = col1)) +
-              geom_bar(stat = "identity") +
-              geom_text(aes(label = round(corr,2)), vjust = -1) +
+            ggplot2::ggplot(a, aes(reorder(x = col1, -corr), y = corr,fill = col1)) +
+              ggplot2::geom_bar(stat = "identity") +
+              ggplot2::geom_text(aes(label = round(corr,2)), vjust = -1) +
               scale_fill_brewer(palette="Paired")+
               ggplot2::labs(x = NULL,
                             y = "Correlação",
                             fill = colnames(dados[k]),
-                            paste(colnames(dados[j]),colnames(dados[k]), sep = " e " ))
+                            title = paste("Correlação entre ",colnames(dados[j]),colnames(dados[k]), sep = " e " ))+
+              ggplot2::coord_flip()
           )
           stop("teste")} ,error = function(e){})
 
@@ -160,7 +164,6 @@ for (i in 1:ncol(dados)-1) {
         print(
           ggplot2::ggplot(dados, aes_string(x = nome1,y = nome2)) +
             ggplot2::geom_boxplot() +
-            ggplot2::coord_flip() +
             ggplot2::labs(
               title = paste(colnames(dados[i]),colnames(dados[j]),sep = " x ")
             )
@@ -176,7 +179,8 @@ for (i in 1:ncol(dados)-1) {
           knitr::kable(dados %>%
                          dplyr::group_by_at(colnames(dados[i])) %>%
                          dplyr::summarize_at(.vars = colnames(dados[j]),
-                                      list(~ min(.,na.rm = TRUE),
+                                      list(n = ~ n(),
+                                            ~ min(.,na.rm = TRUE),
                                            q1 = ~ quantile(.,
                                                            probs = c(0.25),
                                                            na.rm = TRUE),
@@ -225,7 +229,8 @@ for (i in 1:ncol(dados)-1) {
           knitr::kable(dados %>%
                          dplyr::group_by_at(colnames(dados[j])) %>%
                          dplyr::summarize_at(.vars = colnames(dados[i]),
-                                      list(~ min(.,na.rm = TRUE),
+                                      list(n = ~ n(),
+                                           ~ min(.,na.rm = TRUE),
                                            q1 = ~ quantile(.
                                                            ,probs = c(0.25),
                                                            na.rm = TRUE),
@@ -248,18 +253,16 @@ for (i in 1:ncol(dados)-1) {
           dplyr::group_split() %>%
           setNames(unlist(group_keys(dados2)))
 
-        skip_to_next <- FALSE
         tryCatch({
         dados4 <- do.call("cbind", dados3)
 
         dados5 <- dplyr::select_if(dados4, is.numeric)
 
         print(
-          chart.Correlation(dados5)
+          PerformanceAnalytics::chart.Correlation(dados5)
         )
         stop("teste")} ,error = function(e){})
 
-        if(skip_to_next) { next }
 
 
       }
@@ -292,10 +295,11 @@ for (i in 1:ncol(dados)-1) {
           ggplot2::ggplot(teste, aes(x = col1,y = perc, fill = col2)) +
             ggplot2::geom_bar(stat = "identity", position = position_dodge(width = 1)) +
             ggplot2::geom_text(aes(label = paste0("(",qtd,", ",perc,"%",")")),position = position_dodge(width = 1), vjust = -1, size = 2) +
-            ggplot2::scale_fill_brewer(palette="Paired") +
+            scale_fill_brewer(palette="Paired") +
             ggplot2::labs(x = NULL,
                  y = "count & perc",
-                 fill = colnames(dados[j]))
+                 fill = colnames(dados[j]),
+                 title = paste("Quantidade e Percentual de", colnames(dados[i])," por ",colnames(dados[j])))
 
 
         )
